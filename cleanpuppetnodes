@@ -38,7 +38,7 @@ for fichero in $(ls /var/lib/puppet/yaml/facts/*); do
 
    DIAS=$((diferencia/60/60/24))
 
-   if [ $DIAS -gt $ANTIGUEDADMAX ]; then
+   if [ $DIAS -ge $ANTIGUEDADMAX ]; then
       hostname=$(sed -n 's|fqdn:\(.*\)|\1|p' $fichero | sed -e 's/^[ \t]*//')
       archivo=$(basename $fichero)
       uuid=$(echo "${archivo%.*}")
