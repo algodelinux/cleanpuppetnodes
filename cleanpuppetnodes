@@ -1,0 +1,48 @@
+#!/bin/bash
+# ------------------------------------------------------------
+# script:  cleanpuppetnodes
+# Author:  Esteban M. Navas Martín
+# Date:    12-01-2017
+# Ver:     12-01-2017
+#
+# Purpose: This program cleans the following puppet node info: facts, node and certificate
+#
+# Copyright (c) 2012-2017 Esteban M. Navas Martín <algodelinux@gmail.com>. All rights reserved.
+
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#   You should have received a copy of the GNU General Public License
+#   along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+
+# Comprobamos si se han introducido la antigüedad como parámetro
+if [ $# -lt 1 ]; then
+   ANTIGUEDADMAX="60" # antigüedad máxima por defecto
+else 
+   ANTIGUEDADMAX=$1
+fi
+
+antsyslog=$(stat -c %Y  /var/log/syslog)
+
+for fichero in $(ls /var/lib/puppet/yaml/facts/*); do
+   # Calculamos la diferencia
+   antfichero=$(stat -c %Y $fichero)
+   diferencia=$((antsyslog-antfichero))
+
+   DIAS=$((diferencia/60/60/24))
+
+   if [ $DIAS -gt $ANTIGUEDADMAX ]; then
+      hostname=$(sed -n 's|fqdn:\(.*\)|\1|p' $fichero | sed -e 's/^[ \t]*//')
+      archivo=$(basename $fichero)
+      uuid=$(echo "${archivo%.*}")
+      echo "Cleaning puppet node $uuid ($hostname): $DIAS days old."
+      puppet node clean $HOST
+   fi
+done
