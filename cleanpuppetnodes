@@ -43,6 +43,6 @@ for fichero in $(ls /var/lib/puppet/yaml/facts/*); do
       archivo=$(basename $fichero)
       uuid=$(echo "${archivo%.*}")
       echo "Cleaning puppet node $uuid ($hostname): $DIAS days old."
-      puppet node clean $HOST
+      puppet node clean $uuid
    fi
 done
