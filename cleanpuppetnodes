@@ -3,11 +3,11 @@
 # script:  cleanpuppetnodes
 # Author:  Esteban M. Navas Martín
 # Date:    12-01-2017
-# Ver:     12-01-2017
+# Ver:     13-01-2017
 #
 # Purpose: This program cleans the following puppet node info: facts, node and certificate
 #
-# Copyright (c) 2012-2017 Esteban M. Navas Martín <algodelinux@gmail.com>. All rights reserved.
+# Copyright (c) 2012-2017 Esteban M. Navas Martín <adminies.valledeljerte@edu.juntaextremadura.net>. All rights reserved.
 
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -25,11 +25,13 @@
 # Comprobamos si se han introducido la antigüedad como parámetro
 if [ $# -lt 1 ]; then
    ANTIGUEDADMAX="60" # antigüedad máxima por defecto
-else 
+else
    ANTIGUEDADMAX=$1
 fi
 
 antsyslog=$(stat -c %Y  /var/log/syslog)
+
+:> /tmp/puppetclean.tmp
 
 for fichero in $(ls /var/lib/puppet/yaml/facts/*); do
    # Calculamos la diferencia
@@ -37,12 +39,29 @@ for fichero in $(ls /var/lib/puppet/yaml/facts/*); do
    diferencia=$((antsyslog-antfichero))
 
    DIAS=$((diferencia/60/60/24))
+   hostname=$(sed -n 's|fqdn:\(.*\)|\1|p' $fichero | sed -e 's/^[ \t]*//')
+   archivo=$(basename $fichero)
+   uuid=$(echo "${archivo%.*}")
 
    if [ $DIAS -ge $ANTIGUEDADMAX ]; then
-      hostname=$(sed -n 's|fqdn:\(.*\)|\1|p' $fichero | sed -e 's/^[ \t]*//')
-      archivo=$(basename $fichero)
-      uuid=$(echo "${archivo%.*}")
-      echo "Cleaning puppet node $uuid ($hostname): $DIAS days old."
+      echo "Cleaning puppet node $uuid ($hostname): $DIAS days old"
       puppet node clean $uuid
+   else
+      echo "$diferencia:$hostname:$fichero" >> /tmp/puppetclean.tmp
    fi
+done
+
+sort -o /tmp/puppetclean.tmp -t':' -k2,1 /tmp/puppetclean.tmp
+sort -t':' -k2,2 /tmp/puppetclean.tmp | cut -f2 -d":" |uniq -d > /tmp/dupnodes.tmp
+
+for nodo in $(cat /tmp/dupnodes.tmp); do
+    grep $nodo /tmp/puppetclean.tmp | tail -n +2 | cut -f3 -d":" > /tmp/dupcerts.tmp
+
+    for fichero in $(cat /tmp/dupcerts.tmp); do
+        hostname=$(sed -n 's|fqdn:\(.*\)|\1|p' $fichero | sed -e 's/^[ \t]*//')
+        archivo=$(basename $fichero)
+        uuid=$(echo "${archivo%.*}")
+        echo "Cleaning old puppet node $uuid ($hostname)"
+        puppet node clean $uuid
+    done
 done
