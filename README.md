@@ -12,8 +12,8 @@ Installing
 
 You can install it simply running these commands on your puppetmaster:
 
-# wget --no-check-certificate -O /usr/local/sbin/cleanpuppetnodes https://github.com/algodelinux/cleanpuppetnodes/raw/master/cleanpuppetnodes  
-# chmod 755 /usr/local/sbin/cleanpuppetnodes  
+   wget --no-check-certificate -O /usr/local/sbin/cleanpuppetnodes https://github.com/algodelinux/cleanpuppetnodes/raw/master/cleanpuppetnodes  
+   chmod 755 /usr/local/sbin/cleanpuppetnodes  
 
 
 Using
@@ -21,11 +21,11 @@ Using
 
 You can use it without parameters an clean nodes older than predefined days:
 
-# cleanpuppetnodes
+   cleanpuppetnodes
 
 Or specify maximun number days:
 
-# cleanpuppetnodes 30
+   cleanpuppetnodes 30
 
 
 ## Authors
