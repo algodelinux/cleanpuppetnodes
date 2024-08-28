@@ -24,16 +24,20 @@
 
 # Comprobamos si se han introducido la antigüedad como parámetro
 if [ $# -lt 1 ]; then
-   ANTIGUEDADMAX="60" # antigüedad máxima por defecto
+   ANTIGUEDADMAX="90" # antigüedad máxima por defecto
 else
    ANTIGUEDADMAX=$1
 fi
 
-antsyslog=$(stat -c %Y  /var/log/syslog)
-
 :> /tmp/puppetclean.tmp
 
-for fichero in $(ls /var/lib/puppet/yaml/facts/*); do
+antsyslog=$(stat -c %Y /var/log/syslog)
+
+facts_dir="$(find /opt/puppetlabs -path '*/yaml/facts')"
+
+[ -z $facts_dir ] && exit 1
+
+for fichero in $(ls $facts_dir/* 2>/dev/null); do
    # Calculamos la diferencia
    antfichero=$(stat -c %Y $fichero)
    diferencia=$((antsyslog-antfichero))
